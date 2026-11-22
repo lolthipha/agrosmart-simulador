@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123b32">
+  <title>AgroSmart | Simulador rural</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AgroSmart, inicio">
+        <span class="brand-mark">A</span>
+        <span>Agro<span class="brand-light">Smart</span><small>SIMULADOR RURAL</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="demo-tag"><span class="pulse-dot"></span> MODO DEMOSTRACIÓN</span>
+        <button class="button button-quiet button-small" id="resetBtn" type="button">↺ Reiniciar</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-row">
+        <div>
+          <p class="eyebrow">GESTIÓN INTELIGENTE DEL CULTIVO</p>
+          <h1>Control rural <span>en tiempo real</span></h1>
+          <p class="hero-copy">Experimenta con el riego, el consumo de agua y las condiciones ambientales desde un solo panel.</p>
+        </div>
+        <div class="clock-card">
+          <span class="mini-label">RELOJ SIMULADO</span>
+          <strong id="simClock">05:00</strong>
+          <span id="simDay">Dia 01</span>
+        </div>
+      </section>
+
+      <section class="scenario-strip panel">
+        <div class="section-heading compact-heading">
+          <div><p class="eyebrow">PRUEBAS RÁPIDAS</p><h2>Elige una situación</h2></div>
+          <span class="helper-text">Cambia el entorno para observar las respuestas del sistema.</span>
+        </div>
+        <div class="scenario-buttons">
+          <button class="scenario-button selected" data-scenario="normal" type="button"><span>🌱</span><b>Día normal</b><small>Condiciones variables</small></button>
+          <button class="scenario-button" data-scenario="hot_dry" type="button"><span>☀️</span><b>Día caluroso y seco</b><small>Suelo con poca humedad</small></button>
+          <button class="scenario-button" data-scenario="sudden_rain" type="button"><span>🌧️</span><b>Lluvia repentina</b><small>El riego debe bloquearse</small></button>
+          <button class="scenario-button" data-scenario="mosquito_dusk" type="button"><span>🌆</span><b>Atardecer</b><small>Condiciones favorables de ejemplo</small></button>
+        </div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Condiciones actuales">
+        <article class="metric-card">
+          <div class="metric-top"><span>Humedad del suelo</span><span class="metric-icon green-icon">◉</span></div>
+          <div class="metric-value"><strong id="soilValue">38%</strong><span id="soilState">Nivel actual</span></div>
+          <div class="meter"><span id="soilBar" class="meter-fill soil-fill" style="width:38%"></span></div>
+          <small>Objetivo: <b id="targetLabel">60%</b></small>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span>Temperatura ambiente</span><span class="metric-icon orange-icon">⌁</span></div>
+          <div class="metric-value"><strong id="tempValue">22°C</strong><span>Temperatura simulada</span></div>
+          <div class="metric-note">Rango configurado para alerta: <b id="tempRangeLabel">22–30°C</b></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span>Humedad ambiental</span><span class="metric-icon blue-icon">◌</span></div>
+          <div class="metric-value"><strong id="airHumidityValue">70%</strong><span>Humedad del aire</span></div>
+          <div class="metric-note">Mínimo para alerta: <b id="airMinLabel">60%</b></div>
+        </article>
+        <article class="metric-card water-metric">
+          <div class="metric-top"><span>Agua ahorrada</span><span class="metric-icon green-icon">♧</span></div>
+          <div class="metric-value"><strong id="savedValue">0 L</strong><span>Por riegos omitidos</span></div>
+          <div class="metric-note">Agua utilizada: <b id="usedValue">0 L</b></div>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <article class="panel control-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">RELOJ Y TIEMPO</p><h2>Control de simulación</h2></div>
+            <span class="live-indicator"><span></span> SIMULACIÓN</span>
+          </div>
+          <div class="time-controls">
+            <button class="button button-primary" id="startBtn" type="button">▶ Iniciar</button>
+            <button class="button button-secondary" id="pauseBtn" type="button" disabled>Ⅱ Pausar</button>
+            <button class="button button-secondary" id="stepBtn" type="button">+ 1 hora</button>
+            <button class="button button-secondary" id="sixHoursBtn" type="button">+ 6 horas</button>
+            <button class="button button-secondary" id="dayBtn" type="button">+ 24 horas</button>
+          </div>
+          <div class="speed-row">
+            <label for="speedSelect">Velocidad del reloj</label>
+            <select id="speedSelect">
+              <option value="5">1 hora simulada cada 5 segundos</option>
+              <option value="2">1 hora simulada cada 2 segundos</option>
+              <option value="1" selected>1 hora simulada cada 1 segundo</option>
+            </select>
+          </div>
+          <div class="status-divider"></div>
+          <div class="section-heading status-heading"><div><p class="eyebrow">RESPUESTA AUTOMÁTICA</p><h2>Estado de los sistemas</h2></div></div>
+          <div class="system-status-grid">
+            <div class="system-status">
+              <div class="status-symbol water-symbol">💧</div>
+              <div class="status-content"><b>Riego inteligente</b><strong id="irrigationStatus" class="status-pill neutral">En espera</strong><p id="irrigationMessage">En espera del siguiente ciclo</p></div>
+            </div>
+            <div class="system-status">
+              <div class="status-symbol alert-symbol">🔔</div>
+              <div class="status-content"><b>Alerta de mosquitos</b><strong id="mosquitoStatus" class="status-pill neutral">En espera</strong><p id="mosquitoMessage">Evaluando hora, temperatura y humedad.</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel settings-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">PERSONALIZA LAS REGLAS</p><h2>Configuración</h2></div>
+            <span class="settings-icon">⚙</span>
+          </div>
+          <form id="settingsForm">
+            <div class="form-section-title">Riego y ahorro de agua</div>
+            <div class="form-grid three-cols">
+              <label>Humedad objetivo (%)<input id="targetMoisture" type="number" min="35" max="85" required></label>
+              <label>Inicio (hora)<input id="irrigationStart" type="number" min="0" max="23" required></label>
+              <label>Fin (hora)<input id="irrigationEnd" type="number" min="0" max="23" required></label>
+            </div>
+            <p class="field-hint">El sistema solo riega dentro de esta ventana y mientras el suelo esté por debajo del objetivo.</p>
+            <div class="form-section-title second-form-title">Alerta ambiental</div>
+            <div class="form-grid three-cols">
+              <label>Temp. mínima (°C)<input id="tempMin" type="number" min="10" max="40" required></label>
+              <label>Temp. máxima (°C)<input id="tempMax" type="number" min="10" max="45" required></label>
+              <label>Humedad mín. (%)<input id="humidityMin" type="number" min="20" max="100" required></label>
+            </div>
+            <div class="form-grid two-cols time-window-fields">
+              <label>Franja mañana: inicio<input id="morningStart" type="number" min="0" max="23" required></label>
+              <label>Fin<input id="morningEnd" type="number" min="0" max="23" required></label>
+              <label>Franja tarde: inicio<input id="eveningStart" type="number" min="0" max="23" required></label>
+              <label>Fin<input id="eveningEnd" type="number" min="0" max="23" required></label>
+            </div>
+            <button class="button button-primary save-button" type="submit">Guardar configuración</button>
+            <p id="settingsFeedback" class="form-feedback" aria-live="polite"></p>
+          </form>
+        </article>
+      </section>
+
+      <section class="charts-grid">
+        <article class="panel chart-panel">
+          <div class="section-heading"><div><p class="eyebrow">SEGUIMIENTO DEL CULTIVO</p><h2>Humedad del suelo</h2></div><span class="chart-legend"><i></i> Humedad <i class="legend-target"></i> Objetivo</span></div>
+          <canvas id="moistureChart" height="190" aria-label="Gráfico de humedad del suelo"></canvas>
+        </article>
+        <article class="panel chart-panel">
+          <div class="section-heading"><div><p class="eyebrow">USO RESPONSABLE DEL AGUA</p><h2>Balance hídrico</h2></div></div>
+          <canvas id="waterChart" height="190" aria-label="Gráfico acumulado de agua usada y ahorrada"></canvas>
+          <div class="chart-footnote"><span><i class="used-dot"></i> Agua utilizada</span><span><i class="saved-dot"></i> Agua ahorrada</span></div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel log-panel">
+          <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2>Historial de eventos</h2></div><span class="log-count" id="logCount">0 eventos</span></div>
+          <div class="event-list" id="eventList"><div class="empty-state">Los eventos del simulador aparecerán aquí.</div></div>
+        </article>
+        <article class="panel sound-panel">
+          <div class="section-heading"><div><p class="eyebrow">SEÑAL DE DEMOSTRACIÓN</p><h2>Emisor sonoro</h2></div><span class="sound-wave">)))</span></div>
+          <p>Activa el audio del navegador para escuchar un pitido cuando coincidan las condiciones configuradas.</p>
+          <div class="sound-state"><span class="sound-led" id="soundLed"></span><b id="soundStateText">Audio no habilitado</b></div>
+          <div class="sound-actions"><button class="button button-secondary" id="enableSoundBtn" type="button">Habilitar sonido</button><button class="button button-quiet" id="testSoundBtn" type="button">Probar pitido</button></div>
+          <p class="disclaimer">El sonido representa una señal de alerta dentro del software. No se debe interpretar como un dispositivo probado para repeler mosquitos reales.</p>
+        </article>
+      </section>
+
+      <footer class="footer"><span>AgroSmart · Proyecto académico de simulación</span><span>Los datos y escenarios son ficticios y ajustables.</span></footer>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
